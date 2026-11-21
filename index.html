@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwMjIxNzMxOTE0OTU5NDc3MzU5OCIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2E4NWNlMGRiNmMzN2U0YTZfY3JyX2Jpbm9taWFsX3RyZWVfNDljaGVuLmh0bWwtNzg0In0sImV4cCI6MTc5NTIzNjYyMCwiaWF0IjoxNzk1MjMzMDIwLCJhbGciOiJSUzI1NiJ9.Zxx2T20cBpPNavvd9nIIaXBLolc62P2JqK-7I_FiDYblnFOpzNndEXMlNfTZh-et1QbblLN7tXViZ_5ftcIGQ4zHvKy4ZGtLbn_GhoNFYWleG4QsxuKa1u0-HtoPA_BinIo65N9LvEr02LY87ISO_9J0bHlL_-oBe6z8BDO4fKXjmo0GTWTjeZBP9vJpxkbuiV6jburfw5RNMo9LRhyy3643DWInysetX5fnIXrVOdbBEwVGHIYtnoNS-wSxxCdYBR2EmACJk5aAVIIObeT7IdrFRQiin4WSgJeLSB-nR3n5WqDBGLC0BBzB1l10t_dQxo67bTICSu18CYys4QeTWg","c_a85ce0db6c37e4a6_crr_binomial_tree_49chen.html-784")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>選擇權二元樹評價模型 (CRR Model) - 49陳</title>
+  <!-- 載入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 載入 Google Fonts: Inter 與 Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+TC:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #f3f4f6;
+      user-select: none;
+    }
+
+    /* 模擬經典 Excel 試算表儲存格樣式 */
+    .excel-table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      background-color: #ffffff;
+    }
+
+    .excel-header-corner {
+      background-color: #e6e6e6;
+      border: 1px solid #bfbfbf;
+      width: 42px;
+      min-width: 42px;
+      height: 26px;
+      position: relative;
+    }
+
+    .excel-header-corner::after {
+      content: "";
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 0 8px 8px;
+      border-color: transparent transparent #9ca3af transparent;
+    }
+
+    .excel-col-header {
+      background-color: #e6e6e6;
+      border: 1px solid #bfbfbf;
+      color: #333333;
+      font-weight: 500;
+      font-size: 13px;
+      text-align: center;
+      height: 26px;
+      min-width: 92px;
+      width: 92px;
+    }
+
+    .excel-row-header {
+      background-color: #e6e6e6;
+      border: 1px solid #bfbfbf;
+      color: #333333;
+      font-weight: 500;
+      font-size: 13px;
+      text-align: center;
+      width: 42px;
+      min-width: 42px;
+      height: 26px;
+    }
+
+    .excel-cell {
+      border: 1px solid #d4d4d4;
+      height: 26px;
+      padding: 0 6px;
+      font-size: 13px;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background-color: #ffffff;
+      transition: background-color 0.12s ease;
+    }
+
+    .excel-cell:hover {
+      background-color: #f8fafc;
+    }
+
+    /* 可編輯輸入框儲存格 */
+    .excel-input-cell {
+      padding: 0;
+      background-color: #ffffff;
+    }
+
+    .excel-input-cell:focus-within {
+      outline: 2px solid #217346;
+      outline-offset: -2px;
+      z-index: 10;
+      position: relative;
+    }
+
+    .excel-input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      padding: 0 6px;
+      font-size: 13px;
+      color: #111827;
+      font-family: inherit;
+    }
+
+    /* 模擬 Excel 巨集藍色圓角按鈕 (ActiveX / Form Control Shape) */
+    .vba-macro-btn {
+      background: linear-gradient(180deg, #5b9bd5 0%, #4e8bc4 100%);
+      border: 1px solid #41719c;
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 8px 14px;
+      text-align: left;
+    }
+
+    .vba-macro-btn:hover {
+      background: linear-gradient(180deg, #6aa6dc 0%, #5593cc 100%);
+      box-shadow: 0 4px 8px rgba(65, 113, 156, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .vba-macro-btn:active {
+      background: #41719c;
+      transform: translateY(1px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 浮水印樣式 */
+    .watermark-49chen {
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.relative{position:relative}.bottom-6{bottom:1.5rem}.right-8{right:2rem}.z-0{z-index:0}.z-10{z-index:10}.z-20{z-index:20}.-mb-1{margin-bottom:-0.25rem}.inline-block{display:inline-block}.flex{display:flex}.hidden{display:none}.h-4{height:1rem}.h-6{height:1.5rem}.min-h-screen{min-height:100vh}.w-16{width:4rem}.w-4{width:1rem}.w-6{width:1.5rem}.min-w-full{min-width:100%}.flex-1{flex:1 1 0%}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded{border-radius:0.25rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-t{border-top-left-radius:0.25rem;border-top-right-radius:0.25rem}.border{border-width:1px}.border-x{border-left-width:1px;border-right-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-amber-300{--tw-border-opacity:1;border-color:rgb(252 211 77 / var(--tw-border-opacity, 1))}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity, 1))}.border-gray-300{--tw-border-opacity:1;border-color:rgb(209 213 219 / var(--tw-border-opacity, 1))}.bg-\[\#217346\]{--tw-bg-opacity:1;background-color:rgb(33 115 70 / var(--tw-bg-opacity, 1))}.bg-\[\#e6e6e6\]{--tw-bg-opacity:1;background-color:rgb(230 230 230 / var(--tw-bg-opacity, 1))}.bg-amber-300{--tw-bg-opacity:1;background-color:rgb(252 211 77 / var(--tw-bg-opacity, 1))}.bg-amber-50{--tw-bg-opacity:1;background-color:rgb(255 251 235 / var(--tw-bg-opacity, 1))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-white\/15{background-color:rgb(255 255 255 / 0.15)}.bg-emerald-50\/50{background-color:rgb(236 253 245 / 0.5)}.p-1\.5{padding:0.375rem}.p-2{padding:0.5rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-serif{font-family:ui-serif, Georgia, Cambria, "Times New Roman", Times, serif}.text-5xl{font-size:3rem;line-height:1}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-semibold{font-weight:600}.font-medium{font-weight:500}.italic{font-style:italic}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)}.tracking-wide{letter-spacing:0.025em}.tracking-widest{letter-spacing:0.1em}.text-\[\#217346\]{--tw-text-opacity:1;color:rgb(33 115 70 / var(--tw-text-opacity, 1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.text-amber-900{--tw-text-opacity:1;color:rgb(120 53 15 / var(--tw-text-opacity, 1))}.text-emerald-100{--tw-text-opacity:1;color:rgb(209 250 229 / var(--tw-text-opacity, 1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.text-slate-200\/70{color:rgb(226 232 240 / 0.7)}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.accent-amber-400{accent-color:#fbbf24}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:bg-emerald-50:hover{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/20:hover{background-color:rgb(255 255 255 / 0.2)}.hover\:text-amber-950:hover{--tw-text-opacity:1;color:rgb(69 26 3 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:block{display:block}.sm\:gap-3{gap:0.75rem}.sm\:p-4{padding:1rem}.sm\:text-7xl{font-size:4.5rem;line-height:1}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}</style></head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- 頂部 Excel 綠風格工具列 -->
+  <header class="bg-[#217346] text-white px-4 py-2.5 shadow-md flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <!-- Excel 圖示 SVG -->
+      <div class="bg-white/15 p-1.5 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base sm:text-lg font-bold tracking-wide">選擇權二元樹評價模型 (CRR Model)</h1>
+          <span class="bg-amber-300 text-slate-900 font-extrabold text-xs sm:text-sm px-2.5 py-0.5 rounded-full shadow-sm">
+            49陳
+          </span>
+        </div>
+        <p class="text-xs text-emerald-100 hidden sm:block">Cox-Ross-Rubinstein 二元樹定價試算表（支援美式 A / 歐式 E、買權 C / 賣權 P）</p>
+      </div>
+    </div>
+
+    <!-- 右側功能列 -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <label class="flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg cursor-pointer transition">
+        <input type="checkbox" id="showTerminalOp" class="rounded accent-amber-400" onchange="CRRTree()">
+        <span>顯示期末選擇權節點 (t=n)</span>
+      </label>
+
+      <button type="button" onclick="downloadHtmlFile()" class="flex items-center gap-1.5 bg-white text-[#217346] hover:bg-emerald-50 font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-lg shadow transition cursor-pointer" title="將此網頁下載為獨立的 .html 檔案">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"></path>
+        </svg>
+        <span>下載 HTML</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 模擬 Excel 資料編輯列 (Formula Bar) -->
+  <div class="bg-white border-b border-gray-300 px-3 py-1.5 flex items-center gap-2 text-xs text-gray-600">
+    <div id="activeCellRef" class="w-16 text-center font-semibold text-gray-800 bg-gray-100 border border-gray-300 rounded px-2 py-0.5">B9</div>
+    <div class="text-gray-400 font-serif italic font-bold px-1">fx</div>
+    <div id="formulaBarContent" class="flex-1 bg-gray-50 border border-gray-200 rounded px-2.5 py-0.5 text-gray-700 truncate">11.54048  (OpType=P, ExType=A, n=5)</div>
+    <div class="font-bold text-[#217346] px-2">製作：49陳</div>
+  </div>
+
+  <!-- 提示訊息框 (取代 alert) -->
+  <div id="toastBanner" class="hidden bg-amber-50 border-b border-amber-300 text-amber-900 px-4 py-2 text-xs sm:text-sm flex items-center justify-between">
+    <span id="toastMessage"></span>
+    <button onclick="hideToast()" class="text-amber-700 hover:text-amber-950 font-bold px-2">✕</button>
+  </div>
+
+  <!-- 主要試算表工作區 -->
+  <main class="flex-1 p-2 sm:p-4 overflow-auto">
+    <div class="relative inline-block min-w-full bg-white shadow-md rounded-lg border border-gray-300 overflow-hidden">
+      
+      <!-- 背景大型半透明浮水印：49陳 -->
+      <div class="watermark-49chen absolute right-8 bottom-6 text-5xl sm:text-7xl font-black text-slate-200/70 tracking-widest select-none z-0">
+        49陳
+      </div>
+
+      <!-- 可橫向捲動的試算表容器 -->
+      <div class="overflow-x-auto relative z-10">
+        <div class="relative inline-block">
+          <table id="excelGrid" class="excel-table">
+            <thead id="excelThead"><tr><th class="excel-header-corner"></th><th class="excel-col-header">A</th><th class="excel-col-header">B</th><th class="excel-col-header">C</th><th class="excel-col-header">D</th><th class="excel-col-header">E</th><th class="excel-col-header">F</th><th class="excel-col-header">G</th><th class="excel-col-header">H</th><th class="excel-col-header">I</th><th class="excel-col-header">J</th><th class="excel-col-header">K</th><th class="excel-col-header">L</th><th class="excel-col-header">M</th></tr></thead>
+            <tbody id="excelTbody"><tr><td class="excel-row-header">1</td><td id="cell-1-1" class="excel-cell font-medium text-gray-800">Spot</td><td id="cell-1-2" class="excel-cell excel-input-cell"><input type="number" id="input-r1" class="excel-input text-right" step="any"></td><td id="cell-1-3" class="excel-cell"></td><td id="cell-1-4" class="excel-cell font-medium text-gray-800">價格樹</td><td id="cell-1-5" class="excel-cell text-right tabular-nums">70</td><td id="cell-1-6" class="excel-cell text-right tabular-nums">76.54953</td><td id="cell-1-7" class="excel-cell text-right tabular-nums">83.71186</td><td id="cell-1-8" class="excel-cell text-right tabular-nums">91.54434</td><td id="cell-1-9" class="excel-cell text-right tabular-nums">100.1097</td><td id="cell-1-10" class="excel-cell text-right tabular-nums">109.4764</td><td id="cell-1-11" class="excel-cell text-right tabular-nums"></td><td id="cell-1-12" class="excel-cell text-right tabular-nums"></td><td id="cell-1-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">2</td><td id="cell-2-1" class="excel-cell font-medium text-gray-800">K</td><td id="cell-2-2" class="excel-cell excel-input-cell"><input type="number" id="input-r2" class="excel-input text-right" step="any"></td><td id="cell-2-3" class="excel-cell"></td><td id="cell-2-4" class="excel-cell"></td><td id="cell-2-5" class="excel-cell text-right tabular-nums"></td><td id="cell-2-6" class="excel-cell text-right tabular-nums">64.01085</td><td id="cell-2-7" class="excel-cell text-right tabular-nums">70</td><td id="cell-2-8" class="excel-cell text-right tabular-nums">76.54953</td><td id="cell-2-9" class="excel-cell text-right tabular-nums">83.71186</td><td id="cell-2-10" class="excel-cell text-right tabular-nums">91.54434</td><td id="cell-2-11" class="excel-cell text-right tabular-nums"></td><td id="cell-2-12" class="excel-cell text-right tabular-nums"></td><td id="cell-2-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">3</td><td id="cell-3-1" class="excel-cell font-medium text-gray-800">T</td><td id="cell-3-2" class="excel-cell excel-input-cell"><input type="number" id="input-r3" class="excel-input text-right" step="0.01"></td><td id="cell-3-3" class="excel-cell"></td><td id="cell-3-4" class="excel-cell"></td><td id="cell-3-5" class="excel-cell text-right tabular-nums"></td><td id="cell-3-6" class="excel-cell text-right tabular-nums"></td><td id="cell-3-7" class="excel-cell text-right tabular-nums">58.53412</td><td id="cell-3-8" class="excel-cell text-right tabular-nums">64.01085</td><td id="cell-3-9" class="excel-cell text-right tabular-nums">70</td><td id="cell-3-10" class="excel-cell text-right tabular-nums">76.54953</td><td id="cell-3-11" class="excel-cell text-right tabular-nums"></td><td id="cell-3-12" class="excel-cell text-right tabular-nums"></td><td id="cell-3-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">4</td><td id="cell-4-1" class="excel-cell font-medium text-gray-800">r</td><td id="cell-4-2" class="excel-cell excel-input-cell"><input type="number" id="input-r4" class="excel-input text-right" step="0.001"></td><td id="cell-4-3" class="excel-cell"></td><td id="cell-4-4" class="excel-cell"></td><td id="cell-4-5" class="excel-cell text-right tabular-nums"></td><td id="cell-4-6" class="excel-cell text-right tabular-nums"></td><td id="cell-4-7" class="excel-cell text-right tabular-nums"></td><td id="cell-4-8" class="excel-cell text-right tabular-nums">53.52598</td><td id="cell-4-9" class="excel-cell text-right tabular-nums">58.53412</td><td id="cell-4-10" class="excel-cell text-right tabular-nums">64.01085</td><td id="cell-4-11" class="excel-cell text-right tabular-nums"></td><td id="cell-4-12" class="excel-cell text-right tabular-nums"></td><td id="cell-4-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">5</td><td id="cell-5-1" class="excel-cell font-medium text-gray-800">VoL</td><td id="cell-5-2" class="excel-cell excel-input-cell"><input type="number" id="input-r5" class="excel-input text-right" step="0.01"></td><td id="cell-5-3" class="excel-cell"></td><td id="cell-5-4" class="excel-cell"></td><td id="cell-5-5" class="excel-cell text-right tabular-nums"></td><td id="cell-5-6" class="excel-cell text-right tabular-nums"></td><td id="cell-5-7" class="excel-cell text-right tabular-nums"></td><td id="cell-5-8" class="excel-cell text-right tabular-nums"></td><td id="cell-5-9" class="excel-cell text-right tabular-nums">48.94633</td><td id="cell-5-10" class="excel-cell text-right tabular-nums">53.52598</td><td id="cell-5-11" class="excel-cell text-right tabular-nums"></td><td id="cell-5-12" class="excel-cell text-right tabular-nums"></td><td id="cell-5-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">6</td><td id="cell-6-1" class="excel-cell font-medium text-gray-800">n</td><td id="cell-6-2" class="excel-cell excel-input-cell"><input type="number" id="input-r6" class="excel-input text-right" step="1" min="1" max="25"></td><td id="cell-6-3" class="excel-cell"></td><td id="cell-6-4" class="excel-cell"></td><td id="cell-6-5" class="excel-cell text-right tabular-nums"></td><td id="cell-6-6" class="excel-cell text-right tabular-nums"></td><td id="cell-6-7" class="excel-cell text-right tabular-nums"></td><td id="cell-6-8" class="excel-cell text-right tabular-nums"></td><td id="cell-6-9" class="excel-cell text-right tabular-nums"></td><td id="cell-6-10" class="excel-cell text-right tabular-nums">44.75851</td><td id="cell-6-11" class="excel-cell text-right tabular-nums"></td><td id="cell-6-12" class="excel-cell text-right tabular-nums"></td><td id="cell-6-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">7</td><td id="cell-7-1" class="excel-cell font-medium text-gray-800">OpType</td><td id="cell-7-2" class="excel-cell excel-input-cell"><select id="input-r7" class="excel-input text-left cursor-pointer">
+                <option value="P">P (賣權 Put)</option>
+                <option value="C">C (買權 Call)</option>
+              </select></td><td id="cell-7-3" class="excel-cell"></td><td id="cell-7-4" class="excel-cell"></td><td id="cell-7-5" class="excel-cell text-right tabular-nums"></td><td id="cell-7-6" class="excel-cell text-right tabular-nums"></td><td id="cell-7-7" class="excel-cell text-right tabular-nums"></td><td id="cell-7-8" class="excel-cell text-right tabular-nums"></td><td id="cell-7-9" class="excel-cell text-right tabular-nums"></td><td id="cell-7-10" class="excel-cell text-right tabular-nums"></td><td id="cell-7-11" class="excel-cell text-right tabular-nums"></td><td id="cell-7-12" class="excel-cell text-right tabular-nums"></td><td id="cell-7-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">8</td><td id="cell-8-1" class="excel-cell font-medium text-gray-800">ExType</td><td id="cell-8-2" class="excel-cell excel-input-cell"><select id="input-r8" class="excel-input text-left cursor-pointer">
+                <option value="A">A (美式 American)</option>
+                <option value="E">E (歐式 European)</option>
+              </select></td><td id="cell-8-3" class="excel-cell"></td><td id="cell-8-4" class="excel-cell"></td><td id="cell-8-5" class="excel-cell text-right tabular-nums"></td><td id="cell-8-6" class="excel-cell text-right tabular-nums"></td><td id="cell-8-7" class="excel-cell text-right tabular-nums"></td><td id="cell-8-8" class="excel-cell text-right tabular-nums"></td><td id="cell-8-9" class="excel-cell text-right tabular-nums"></td><td id="cell-8-10" class="excel-cell text-right tabular-nums"></td><td id="cell-8-11" class="excel-cell text-right tabular-nums"></td><td id="cell-8-12" class="excel-cell text-right tabular-nums"></td><td id="cell-8-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">9</td><td id="cell-9-1" class="excel-cell font-medium text-gray-800">選擇權價值=</td><td id="cell-9-2" class="excel-cell text-right font-bold text-[#217346] bg-emerald-50/50">11.54048</td><td id="cell-9-3" class="excel-cell"></td><td id="cell-9-4" class="excel-cell"></td><td id="cell-9-5" class="excel-cell text-right tabular-nums"></td><td id="cell-9-6" class="excel-cell text-right tabular-nums"></td><td id="cell-9-7" class="excel-cell text-right tabular-nums"></td><td id="cell-9-8" class="excel-cell text-right tabular-nums"></td><td id="cell-9-9" class="excel-cell text-right tabular-nums"></td><td id="cell-9-10" class="excel-cell text-right tabular-nums"></td><td id="cell-9-11" class="excel-cell text-right tabular-nums"></td><td id="cell-9-12" class="excel-cell text-right tabular-nums"></td><td id="cell-9-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">10</td><td id="cell-10-1" class="excel-cell"></td><td id="cell-10-2" class="excel-cell"></td><td id="cell-10-3" class="excel-cell"></td><td id="cell-10-4" class="excel-cell font-medium text-gray-800">選擇權樹</td><td id="cell-10-5" class="excel-cell text-right tabular-nums">11.54048</td><td id="cell-10-6" class="excel-cell text-right tabular-nums">7.071691</td><td id="cell-10-7" class="excel-cell text-right tabular-nums">3.332061</td><td id="cell-10-8" class="excel-cell text-right tabular-nums">0.8556424</td><td id="cell-10-9" class="excel-cell text-right tabular-nums">0</td><td id="cell-10-10" class="excel-cell text-right tabular-nums"></td><td id="cell-10-11" class="excel-cell text-right tabular-nums"></td><td id="cell-10-12" class="excel-cell text-right tabular-nums"></td><td id="cell-10-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">11</td><td id="cell-11-1" class="excel-cell"></td><td id="cell-11-2" class="excel-cell"></td><td id="cell-11-3" class="excel-cell"></td><td id="cell-11-4" class="excel-cell"></td><td id="cell-11-5" class="excel-cell text-right tabular-nums"></td><td id="cell-11-6" class="excel-cell text-right tabular-nums">16.10232</td><td id="cell-11-7" class="excel-cell text-right tabular-nums">10.86846</td><td id="cell-11-8" class="excel-cell text-right tabular-nums">5.835487</td><td id="cell-11-9" class="excel-cell text-right tabular-nums">1.718246</td><td id="cell-11-10" class="excel-cell text-right tabular-nums"></td><td id="cell-11-11" class="excel-cell text-right tabular-nums"></td><td id="cell-11-12" class="excel-cell text-right tabular-nums"></td><td id="cell-11-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">12</td><td id="cell-12-1" class="excel-cell"></td><td id="cell-12-2" class="excel-cell"></td><td id="cell-12-3" class="excel-cell"></td><td id="cell-12-4" class="excel-cell"></td><td id="cell-12-5" class="excel-cell text-right tabular-nums"></td><td id="cell-12-6" class="excel-cell text-right tabular-nums"></td><td id="cell-12-7" class="excel-cell text-right tabular-nums">21.46588</td><td id="cell-12-8" class="excel-cell text-right tabular-nums">15.98915</td><td id="cell-12-9" class="excel-cell text-right tabular-nums">10</td><td id="cell-12-10" class="excel-cell text-right tabular-nums"></td><td id="cell-12-11" class="excel-cell text-right tabular-nums"></td><td id="cell-12-12" class="excel-cell text-right tabular-nums"></td><td id="cell-12-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">13</td><td id="cell-13-1" class="excel-cell"></td><td id="cell-13-2" class="excel-cell"></td><td id="cell-13-3" class="excel-cell"></td><td id="cell-13-4" class="excel-cell"></td><td id="cell-13-5" class="excel-cell text-right tabular-nums"></td><td id="cell-13-6" class="excel-cell text-right tabular-nums"></td><td id="cell-13-7" class="excel-cell text-right tabular-nums"></td><td id="cell-13-8" class="excel-cell text-right tabular-nums">26.47402</td><td id="cell-13-9" class="excel-cell text-right tabular-nums">21.46588</td><td id="cell-13-10" class="excel-cell text-right tabular-nums"></td><td id="cell-13-11" class="excel-cell text-right tabular-nums"></td><td id="cell-13-12" class="excel-cell text-right tabular-nums"></td><td id="cell-13-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">14</td><td id="cell-14-1" class="excel-cell"></td><td id="cell-14-2" class="excel-cell"></td><td id="cell-14-3" class="excel-cell"></td><td id="cell-14-4" class="excel-cell"></td><td id="cell-14-5" class="excel-cell text-right tabular-nums"></td><td id="cell-14-6" class="excel-cell text-right tabular-nums"></td><td id="cell-14-7" class="excel-cell text-right tabular-nums"></td><td id="cell-14-8" class="excel-cell text-right tabular-nums"></td><td id="cell-14-9" class="excel-cell text-right tabular-nums">31.05367</td><td id="cell-14-10" class="excel-cell text-right tabular-nums"></td><td id="cell-14-11" class="excel-cell text-right tabular-nums"></td><td id="cell-14-12" class="excel-cell text-right tabular-nums"></td><td id="cell-14-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">15</td><td id="cell-15-1" class="excel-cell"></td><td id="cell-15-2" class="excel-cell"></td><td id="cell-15-3" class="excel-cell"></td><td id="cell-15-4" class="excel-cell"></td><td id="cell-15-5" class="excel-cell text-right tabular-nums"></td><td id="cell-15-6" class="excel-cell text-right tabular-nums"></td><td id="cell-15-7" class="excel-cell text-right tabular-nums"></td><td id="cell-15-8" class="excel-cell text-right tabular-nums"></td><td id="cell-15-9" class="excel-cell text-right tabular-nums"></td><td id="cell-15-10" class="excel-cell text-right tabular-nums"></td><td id="cell-15-11" class="excel-cell text-right tabular-nums"></td><td id="cell-15-12" class="excel-cell text-right tabular-nums"></td><td id="cell-15-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">16</td><td id="cell-16-1" class="excel-cell"></td><td id="cell-16-2" class="excel-cell"></td><td id="cell-16-3" class="excel-cell"></td><td id="cell-16-4" class="excel-cell"></td><td id="cell-16-5" class="excel-cell text-right tabular-nums"></td><td id="cell-16-6" class="excel-cell text-right tabular-nums"></td><td id="cell-16-7" class="excel-cell text-right tabular-nums"></td><td id="cell-16-8" class="excel-cell text-right tabular-nums"></td><td id="cell-16-9" class="excel-cell text-right tabular-nums"></td><td id="cell-16-10" class="excel-cell text-right tabular-nums"></td><td id="cell-16-11" class="excel-cell text-right tabular-nums"></td><td id="cell-16-12" class="excel-cell text-right tabular-nums"></td><td id="cell-16-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">17</td><td id="cell-17-1" class="excel-cell"></td><td id="cell-17-2" class="excel-cell"></td><td id="cell-17-3" class="excel-cell"></td><td id="cell-17-4" class="excel-cell"></td><td id="cell-17-5" class="excel-cell text-right tabular-nums"></td><td id="cell-17-6" class="excel-cell text-right tabular-nums"></td><td id="cell-17-7" class="excel-cell text-right tabular-nums"></td><td id="cell-17-8" class="excel-cell text-right tabular-nums"></td><td id="cell-17-9" class="excel-cell text-right tabular-nums"></td><td id="cell-17-10" class="excel-cell text-right tabular-nums"></td><td id="cell-17-11" class="excel-cell text-right tabular-nums"></td><td id="cell-17-12" class="excel-cell text-right tabular-nums"></td><td id="cell-17-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">18</td><td id="cell-18-1" class="excel-cell"></td><td id="cell-18-2" class="excel-cell"></td><td id="cell-18-3" class="excel-cell"></td><td id="cell-18-4" class="excel-cell"></td><td id="cell-18-5" class="excel-cell text-right tabular-nums"></td><td id="cell-18-6" class="excel-cell text-right tabular-nums"></td><td id="cell-18-7" class="excel-cell text-right tabular-nums"></td><td id="cell-18-8" class="excel-cell text-right tabular-nums"></td><td id="cell-18-9" class="excel-cell text-right tabular-nums"></td><td id="cell-18-10" class="excel-cell text-right tabular-nums"></td><td id="cell-18-11" class="excel-cell text-right tabular-nums"></td><td id="cell-18-12" class="excel-cell text-right tabular-nums"></td><td id="cell-18-13" class="excel-cell text-right tabular-nums"></td></tr><tr><td class="excel-row-header">19</td><td id="cell-19-1" class="excel-cell"></td><td id="cell-19-2" class="excel-cell"></td><td id="cell-19-3" class="excel-cell"></td><td id="cell-19-4" class="excel-cell"></td><td id="cell-19-5" class="excel-cell text-right tabular-nums"></td><td id="cell-19-6" class="excel-cell text-right tabular-nums"></td><td id="cell-19-7" class="excel-cell text-right tabular-nums"></td><td id="cell-19-8" class="excel-cell text-right tabular-nums"></td><td id="cell-19-9" class="excel-cell text-right tabular-nums"></td><td id="cell-19-10" class="excel-cell text-right tabular-nums"></td><td id="cell-19-11" class="excel-cell text-right tabular-nums"></td><td id="cell-19-12" class="excel-cell text-right tabular-nums"></td><td id="cell-19-13" class="excel-cell text-right tabular-nums"></td></tr></tbody>
+          </table>
+
+          <!-- 模擬 Excel 工作表上的兩個巨集按鈕 (對應截圖第 17~19 列位置) -->
+          <!-- 按鈕 1：清除樹 -> 啟動巨集 ClearTree() -->
+          <button id="btnClearTree" type="button" onclick="ClearTree()" class="vba-macro-btn absolute z-20" style="left: 118px; top: 444px; width: 146px; height: 64px;" title="執行巨集：ClearTree()">
+            清除樹
+          </button>
+
+          <!-- 按鈕 2：計算選擇權 -> 啟動巨集 CRRTree() -->
+          <button id="btnCalcOption" type="button" onclick="CRRTree()" class="vba-macro-btn absolute z-20" style="left: 312px; top: 444px; width: 146px; height: 64px;" title="執行巨集：CRRTree()">
+            計算選擇權
+          </button>
+        </div>
+      </div>
+
+      <!-- 底部 Excel 工作表分頁標籤列 -->
+      <div class="bg-[#e6e6e6] border-t border-gray-300 px-3 py-1 flex items-center justify-between text-xs text-gray-600">
+        <div class="flex items-center gap-1">
+          <span class="bg-white text-[#217346] font-bold px-3 py-1 rounded-t border-x border-t border-gray-300 -mb-1 shadow-xs">
+            CRR二元樹評價 (49陳)
+          </span>
+          <span class="px-2.5 py-1 text-gray-500">+</span>
+        </div>
+        <div class="flex items-center gap-4 text-[11px] text-gray-600">
+          <span id="treeParamsSummary">dt = 0.2000 | u = 1.09356 | d = 0.91444 | p = 0.50003</span>
+          <span class="font-semibold text-gray-800">49陳 專屬介面</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 預設參數值（與截圖完全一致）
+    const defaultParams = {
+      Spot: 70,
+      K: 80,
+      T: 1,
+      rf: 0.02,
+      vol: 0.2,
+      n: 5,
+      OpType: 'P',
+      ExType: 'A'
+    };
+
+    // 目前試算表行列數設定（預設 A~M 共 13 欄，1~19 列，若 n 較大則自動擴充）
+    let currentCols = 13; // A=1 ... M=13
+    let currentRows = 19;
+
+    // 將欄位索引 (1-based) 轉換為 Excel 欄位名稱 (1 -> A, 2 -> B, ..., 27 -> AA)
+    function getExcelColName(colIndex) {
+      let dividend = colIndex;
+      let columnName = '';
+      while (dividend > 0) {
+        let modulo = (dividend - 1) % 26;
+        columnName = String.fromCharCode(65 + modulo) + columnName;
+        dividend = Math.floor((dividend - modulo) / 26);
+      }
+      return columnName;
+    }
+
+    // 格式化數字，貼近 Excel 預設 General 顯示效果（最多顯示 6~7 位有效小數並去除多餘尾零）
+    function formatExcelNumber(num) {
+      if (num === null || num === undefined || isNaN(num)) return '';
+      if (Math.abs(num) < 1e-12) return '0';
+      // 針對截圖數值如 76.54953, 11.54048 等，取 7 位有效數字或最多 6 位小數
+      const rounded = Number(num.toPrecision(7));
+      return String(rounded);
+    }
+
+    // 顯示上方提示訊息（不使用 alert）
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+    }
+
+    function hideToast() {
+      document.getElementById('toastBanner').classList.add('hidden');
+    }
+
+    // 更新上方資料編輯列顯示
+    function updateFormulaBar(cellRef, content) {
+      document.getElementById('activeCellRef').textContent = cellRef;
+      document.getElementById('formulaBarContent').textContent = content;
+    }
+
+    // 建立或重建試算表網格
+    function buildGrid(cols, rows) {
+      // 保留目前輸入值（若已存在）
+      const savedValues = getInputsFromDOM(false);
+
+      currentCols = Math.max(13, cols);
+      currentRows = Math.max(19, rows);
+
+      const thead = document.getElementById('excelThead');
+      const tbody = document.getElementById('excelTbody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      // 建立表頭列 (A, B, C, ...)
+      const headerRow = document.createElement('tr');
+      const cornerTh = document.createElement('th');
+      cornerTh.className = 'excel-header-corner';
+      headerRow.appendChild(cornerTh);
+
+      for (let c = 1; c <= currentCols; c++) {
+        const th = document.createElement('th');
+        th.className = 'excel-col-header';
+        th.textContent = getExcelColName(c);
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+
+      // 建立資料列 (1 ~ currentRows)
+      for (let r = 1; r <= currentRows; r++) {
+        const tr = document.createElement('tr');
+
+        // 左側列號
+        const rowHeader = document.createElement('td');
+        rowHeader.className = 'excel-row-header';
+        rowHeader.textContent = r;
+        tr.appendChild(rowHeader);
+
+        for (let c = 1; c <= currentCols; c++) {
+          const td = document.createElement('td');
+          td.id = `cell-${r}-${c}`;
+          td.className = 'excel-cell';
+          const cellRef = `${getExcelColName(c)}${r}`;
+
+          // 欄位 A 標籤 (A1 ~ A9)
+          if (c === 1) {
+            const labels = {
+              1: 'Spot',
+              2: 'K',
+              3: 'T',
+              4: 'r',
+              5: 'VoL',
+              6: 'n',
+              7: 'OpType',
+              8: 'ExType',
+              9: '選擇權價值='
+            };
+            if (labels[r]) {
+              td.textContent = labels[r];
+              td.classList.add('font-medium', 'text-gray-800');
+              td.onclick = () => updateFormulaBar(cellRef, labels[r]);
+            }
+          }
+          // 欄位 B 輸入與輸出 (B1 ~ B9)
+          else if (c === 2 && r >= 1 && r <= 8) {
+            td.classList.add('excel-input-cell');
+            if (r >= 1 && r <= 6) {
+              const input = document.createElement('input');
+              input.type = 'number';
+              input.id = `input-r${r}`;
+              input.className = 'excel-input text-right';
+              if (r === 1) { input.step = 'any'; input.value = savedValues.Spot; }
+              if (r === 2) { input.step = 'any'; input.value = savedValues.K; }
+              if (r === 3) { input.step = '0.01'; input.value = savedValues.T; }
+              if (r === 4) { input.step = '0.001'; input.value = savedValues.rf; }
+              if (r === 5) { input.step = '0.01'; input.value = savedValues.vol; }
+              if (r === 6) { input.step = '1'; input.min = '1'; input.max = '25'; input.value = savedValues.n; }
+
+              input.addEventListener('focus', () => updateFormulaBar(cellRef, input.value));
+              input.addEventListener('input', () => updateFormulaBar(cellRef, input.value));
+              input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') CRRTree();
+              });
+              td.appendChild(input);
+            } else if (r === 7) {
+              // OpType: C 或 P
+              const select = document.createElement('select');
+              select.id = 'input-r7';
+              select.className = 'excel-input text-left cursor-pointer';
+              select.innerHTML = `
+                <option value="P">P (賣權 Put)</option>
+                <option value="C">C (買權 Call)</option>
+              `;
+              select.value = savedValues.OpType;
+              select.addEventListener('focus', () => updateFormulaBar(cellRef, select.value));
+              select.addEventListener('change', () => updateFormulaBar(cellRef, select.value));
+              td.appendChild(select);
+            } else if (r === 8) {
+              // ExType: A 或 E
+              const select = document.createElement('select');
+              select.id = 'input-r8';
+              select.className = 'excel-input text-left cursor-pointer';
+              select.innerHTML = `
+                <option value="A">A (美式 American)</option>
+                <option value="E">E (歐式 European)</option>
+              `;
+              select.value = savedValues.ExType;
+              select.addEventListener('focus', () => updateFormulaBar(cellRef, select.value));
+              select.addEventListener('change', () => updateFormulaBar(cellRef, select.value));
+              td.appendChild(select);
+            }
+          }
+          // B9: 選擇權價值輸出儲存格
+          else if (c === 2 && r === 9) {
+            td.classList.add('text-right', 'font-bold', 'text-[#217346]', 'bg-emerald-50/50');
+            td.onclick = () => updateFormulaBar('B9', td.textContent || '0');
+          }
+          // D1: 價格樹標題、D10: 選擇權樹標題
+          else if (c === 4 && (r === 1 || r === 10)) {
+            td.classList.add('font-medium', 'text-gray-800');
+            td.onclick = () => updateFormulaBar(cellRef, td.textContent);
+          }
+          // E 欄以後為數值靠右對齊
+          else if (c >= 5) {
+            td.classList.add('text-right', 'tabular-nums');
+            td.onclick = () => updateFormulaBar(cellRef, td.textContent);
+          }
+
+          tr.appendChild(td);
+        }
+
+        tbody.appendChild(tr);
+      }
+
+      // 動態調整兩個 VBA 巨集按鈕的垂直位置（預設在第 17 列開始，若 n 較大則往下移避免遮擋樹狀節點）
+      const buttonStartRow = Math.max(17, currentRows - 2);
+      const topPx = buttonStartRow * 26 + 2; // 表頭 26px + (buttonStartRow - 1) * 26px
+      const btnClear = document.getElementById('btnClearTree');
+      const btnCalc = document.getElementById('btnCalcOption');
+      if (btnClear && btnCalc) {
+        btnClear.style.top = `${topPx}px`;
+        btnCalc.style.top = `${topPx}px`;
+      }
+    }
+
+    // 從介面讀取 B1:B8 參數
+    function getInputsFromDOM(useFallback = true) {
+      const elSpot = document.getElementById('input-r1');
+      if (!elSpot) return { ...defaultParams };
+
+      return {
+        Spot: parseFloat(document.getElementById('input-r1').value),
+        K: parseFloat(document.getElementById('input-r2').value),
+        T: parseFloat(document.getElementById('input-r3').value),
+        rf: parseFloat(document.getElementById('input-r4').value),
+        vol: parseFloat(document.getElementById('input-r5').value),
+        n: parseInt(document.getElementById('input-r6').value, 10),
+        OpType: document.getElementById('input-r7').value,
+        ExType: document.getElementById('input-r8').value
+      };
+    }
+
+    // 設定指定儲存格文字
+    function setCell(row, col, value) {
+      const td = document.getElementById(`cell-${row}-${col}`);
+      if (td) {
+        td.textContent = value;
+      }
+    }
+
+    // ==========================================
+    // 巨集 1：清除樹 ClearTree()
+    // 對應 VBA: Range("d1:m18").ClearContents
+    // ==========================================
+    function ClearTree() {
+      hideToast();
+      // 清除 D1 到最右下角樹狀區域（涵蓋 D1:M18 及動態擴充範圍）
+      for (let r = 1; r <= currentRows; r++) {
+        for (let c = 4; c <= currentCols; c++) {
+          setCell(r, c, '');
+        }
+      }
+      // 清除 B9 選擇權價值顯示
+      setCell(9, 2, '');
+      document.getElementById('treeParamsSummary').textContent = 'u = - , d = - , p = -';
+      updateFormulaBar('D1:M18', '已執行 ClearTree()：清除樹狀圖內容');
+    }
+
+    // ==========================================
+    // 巨集 2：計算選擇權 CRRTree()
+    // 完全依照原始 VBA 演算法與儲存格座標邏輯實作
+    // ==========================================
+    function CRRTree() {
+      hideToast();
+      const { Spot, K, T, rf, vol, n, OpType, ExType } = getInputsFromDOM();
+
+      // 基本防呆驗證
+      if (isNaN(Spot) || Spot <= 0 || isNaN(K) || K <= 0 || isNaN(T) || T <= 0 || isNaN(rf) || isNaN(vol) || vol <= 0) {
+        showToast('請確認 Spot、K、T、r、VoL 皆為有效的正數數值。');
+        return;
+      }
+      if (isNaN(n) || n < 1 || n > 25) {
+        showToast('期數 n 請輸入 1 到 25 之間的整數（截圖預設為 5）。');
+        return;
+      }
+
+      // 計算 CRR 二元樹參數
+      const dt = T / n;
+      const u = Math.exp(vol * Math.pow(dt, 0.5));
+      const d = 1 / u;
+      const p = (Math.exp(rf * dt) - d) / (u - d);
+
+      if (p < 0 || p > 1) {
+        showToast(`警告：風險中立機率 p = ${p.toFixed(4)} 超出 [0, 1] 區間，請調整 r、VoL 或增加期數 n。`);
+      }
+
+      // 若 n > 8，動態擴充試算表欄位與列數，避免超出格線
+      const neededCols = Math.max(13, 5 + n + 2);
+      const optionStartRow = n <= 8 ? 10 : n + 3; // n <= 8 時完全對齊第 10 列 (D10)
+      const neededRows = Math.max(19, optionStartRow + n + 4);
+
+      if (neededCols !== currentCols || neededRows !== currentRows) {
+        buildGrid(neededCols, neededRows);
+      }
+
+      // 先清空舊有樹狀內容
+      for (let r = 1; r <= currentRows; r++) {
+        for (let c = 4; c <= currentCols; c++) {
+          setCell(r, c, '');
+        }
+      }
+
+      // 1. 建立股價樹 (Tree for stock price)
+      // S[t][j]：t 為 0..n，j 為 1..t+1
+      const S = Array.from({ length: n + 1 }, () => Array(n + 2).fill(0));
+      setCell(1, 4, '價格樹');          // Cells(1, 4) = "價格樹"
+      setCell(1, 5, formatExcelNumber(Spot)); // Cells(1, 5) = Spot
+      S[0][1] = Spot;
+
+      for (let t = 1; t <= n; t++) {
+        for (let j = 1; j <= t + 1; j++) {
+          S[t][j] = Spot * Math.pow(u, t - j + 1) * Math.pow(d, j - 1);
+          setCell(j, 5 + t, formatExcelNumber(S[t][j])); // Cells(j, 5 + t) = S(t, j)
+        }
+      }
+
+      // 2. 計算期末選擇權履約價值 (Calculate Terminal Price for Calls and Puts)
+      const Op = Array.from({ length: n + 1 }, () => Array(n + 2).fill(0));
+      const showTerminal = document.getElementById('showTerminalOp').checked;
+
+      for (let j = 1; j <= n + 1; j++) {
+        if (OpType === 'C') {
+          Op[n][j] = Math.max(S[n][j] - K, 0);
+        } else if (OpType === 'P') {
+          Op[n][j] = Math.max(K - S[n][j], 0);
+        }
+        // 若使用者勾選顯示期末節點，則一併寫入第 5 + n 欄
+        if (showTerminal) {
+          setCell(optionStartRow - 1 + j, 5 + n, formatExcelNumber(Op[n][j]));
+        }
+      }
+
+      // 3. 倒推計算各期選擇權價值 (Calculate Remaining entries for Calls and Puts)
+      setCell(optionStartRow, 4, '選擇權樹'); // Cells(10, 4) = "選擇權樹"
+      const discount = Math.exp(-rf * dt);
+
+      for (let t = n - 1; t >= 0; t--) {
+        for (let j = 1; j <= t + 1; j++) {
+          const continuationValue = discount * (p * Op[t + 1][j] + (1 - p) * Op[t + 1][j + 1]);
+
+          if (ExType === 'A') {
+            if (OpType === 'C') {
+              Op[t][j] = Math.max(S[t][j] - K, continuationValue);
+            } else if (OpType === 'P') {
+              Op[t][j] = Math.max(K - S[t][j], continuationValue);
+            }
+          } else if (ExType === 'E') {
+            Op[t][j] = continuationValue;
+          }
+
+          // Cells(9 + j, 5 + t) = Op(t, j)
+          setCell(optionStartRow - 1 + j, 5 + t, formatExcelNumber(Op[t][j]));
+        }
+      }
+
+      // 4. 輸出最終選擇權價值至 B9: Cells(9, 2) = Op(0, 1)
+      const optionValueFormatted = formatExcelNumber(Op[0][1]);
+      setCell(9, 2, optionValueFormatted);
+
+      // 更新狀態列參數摘要
+      document.getElementById('treeParamsSummary').textContent =
+        `dt = ${dt.toFixed(4)} | u = ${u.toFixed(5)} | d = ${d.toFixed(5)} | p = ${p.toFixed(5)}`;
+      updateFormulaBar('B9', `${optionValueFormatted}  (OpType=${OpType}, ExType=${ExType}, n=${n})`);
+    }
+
+    // 下載目前網頁為獨立的 HTML 檔案
+    function downloadHtmlFile() {
+      const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '選擇權二元樹評價模型_49陳.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('已開始下載獨立 HTML 檔案：選擇權二元樹評價模型_49陳.html');
+    }
+
+    // 頁面載入完成後初始化試算表並執行一次 CRRTree() 呈現截圖預設結果
+    window.addEventListener('DOMContentLoaded', () => {
+      buildGrid(13, 19);
+      CRRTree();
+    });
+  </script>
+
+</body></html>
